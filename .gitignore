@@ -1,0 +1,33 @@
+# Arquivos compilados do Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Ambientes Virtuais
+venv/
+env/
+.venv/
+.env/
+
+# Bases de Dados (Evita subir arquivos Excel pesados)
+dataset/*.xlsx
+dataset/Obsoleto
+
+# Modelos gerados / treinados (Evita subir binários grandes no Git)
+# models/*.pkl
+
+# Configurações sensíveis do Streamlit (caso venha a usar)
+.streamlit/secrets.toml
+
+# Notebooks Jupyter (caso use para exploração)
+.ipynb_checkpoints
+
+# Arquivos de Sistema Operacional (Windows / macOS)
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Configurações de IDEs (VS Code, PyCharm, etc)
+.vscode/
+.idea/
+
