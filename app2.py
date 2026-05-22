@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import joblib
-import matplotlib.pyplot as plt
 
 # Configuração da página para um layout mais amplo
 st.set_page_config(page_title="Comparativo de Risco de Fogo", page_icon="🔥", layout="wide")
@@ -16,8 +15,12 @@ def load_models():
 
     return rf_model, gb_model, municipios
 
+@st.cache_data 
+def load_data():
+    return pd.read_csv("models/focos_por_mes.csv")
+
 rf_model, gb_model, municipios = load_models()
-grafico_df = pd.read_csv("models/focos_por_mes.csv")
+grafico_df = load_data()
 
 # Dicionário para traduzir o nome do mês para o número que o modelo espera
 MAPA_MESES = {
@@ -43,20 +46,19 @@ with left_col:
 
 with right_col:
     st.subheader("📈 Histórico de focos por mês")
-    dados_municipio = grafico_df[
-        grafico_df["Municipio_UF"] == municipio
-    ]
-
-    fig, ax = plt.subplots(figsize=(7, 3))
-    ax.plot(
-        dados_municipio["Mes"],
-        dados_municipio["QuantidadeFocos"],
-        marker="o"
-    )
-    ax.set_xlabel("Mês")
-    ax.set_ylabel("Quantidade de focos")
-    ax.set_xticks(range(1, 13))
-    st.pyplot(fig)
+    
+    # Filtra os dados
+    dados_municipio = grafico_df[grafico_df["Municipio_UF"] == municipio]
+    
+    # Para o gráfico nativo do Streamlit ficar perfeito, 
+    # transformamos a coluna 'Mes' no índice do dataframe
+    dados_grafico = dados_municipio.set_index("Mes")["QuantidadeFocos"]
+    
+    if not dados_grafico.empty:
+        # st.bar_chart (barras) ou st.line_chart (linhas) geram gráficos interativos na hora!
+        st.line_chart(dados_grafico, use_container_width=True)
+    else:
+        st.info("Sem histórico de focos de incêndio para este município.")
 
 
 def obter_status_risco(frp):
