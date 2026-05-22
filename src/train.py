@@ -66,6 +66,7 @@ gb_model = Pipeline([
     ("model", gb)
 ])
 
+
 # divisão treino/teste
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, random_state=42
@@ -106,10 +107,12 @@ def avaliar_modelo(nome, modelo):
     print("RMSE:", round(rmse, 4))
     print("R²:", round(r2, 4))
 
+    # Retorna as métricas como um dicionário
+    return {"Modelo": nome, "MAE": round(mae, 4), "RMSE": round(rmse, 4), "R²": round(r2, 4)}
 
-# metricas dos modelos utilizados
-avaliar_modelo("Random Forest", rf_model)
-avaliar_modelo("Gradient Boosting", gb_model)
+linhas_metricas = []
+linhas_metricas.append(avaliar_modelo("Random Forest", rf_model))
+linhas_metricas.append(avaliar_modelo("Gradient Boosting", gb_model))
 
 # Salva os modelos em disco
 joblib.dump(rf_model, "models/rf_model.pkl")
@@ -118,6 +121,9 @@ joblib.dump(gb_model, "models/gb_model.pkl")
 # salvar municípios
 municipios = sorted(df["Municipio_UF"].unique())
 joblib.dump(municipios, "models/municipios.pkl")
+
+df_metricas = pd.DataFrame(linhas_metricas)
+df_metricas.to_csv("models/metricas.csv", index=False)
 
 # dados para o gráfico de focos por mês
 grafico_df = (

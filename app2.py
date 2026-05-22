@@ -142,5 +142,46 @@ with col_comp:
                 if gb_tipo == "success": st.success(f"Risco: {gb_risco}")
                 elif gb_tipo == "warning": st.warning(f"Risco: {gb_risco}")
                 else: st.error(f"Risco: {gb_risco}")
+
     else:
         st.info("👈 Preencha os dados e clique em **Comparar Modelos**.")
+
+
+# ========================================
+# NOVA SEÇÃO: EXIBIÇÃO DE MÉTRICAS GERAIS
+# ========================================
+st.markdown("---")
+
+# Criamos um expander para não poluir a tela inicial do usuário
+with st.expander("📋 Sobre a precisão histórica destes modelos (Métricas de Validação)"):
+    st.markdown("""
+    Essas métricas foram calculadas utilizando 20% do conjunto de dados histórico (dados de teste que os modelos nunca viram no treino). 
+    * **MAE (Erro Absoluto Médio):** Média do erro absoluto. Quanto menor, melhor.
+    * **RMSE (Raiz do Erro Quadrático Médio):** Penaliza erros grandes mais severamente que o MAE. Quanto menor, melhor.
+    * **R² (Coeficiente de Determinação):** Indica a porcentagem da variação do fogo explicada pelas variáveis. Quanto mais próximo de 1.0, melhor.
+    """)
+    
+    try:
+        # Carrega o arquivo gerado pelo treino
+        df_metricas = pd.read_csv("models/metricas.csv")
+        
+        # Cria 3 colunas para colocar os modelos lado a lado
+        m_col1, m_col2 = st.columns(2)
+        
+        # Filtra os dados de cada modelo para exibir nos cards
+        with m_col1:
+            st.markdown("#### 🌲 Random Forest")
+            rf_m = df_metricas[df_metricas["Modelo"] == "Random Forest"].iloc[0]
+            st.metric("R² (Variância)", f"{rf_m['R²']:.4f}")
+            st.metric("MAE (Erro Médio)", f"{rf_m['MAE']:.4f}")
+            st.metric("RMSE (Erros Grandes)", f"{rf_m['RMSE']:.4f}")
+            
+        with m_col2:
+            st.markdown("#### ⚡ Gradient Boosting")
+            gb_m = df_metricas[df_metricas["Modelo"] == "Gradient Boosting"].iloc[0]
+            st.metric("R² (Variância)", f"{gb_m['R²']:.4f}")
+            st.metric("MAE (Erro Médio)", f"{gb_m['MAE']:.4f}")
+            st.metric("RMSE (Erros Grandes)", f"{gb_m['RMSE']:.4f}")
+            
+    except FileNotFoundError:
+        st.warning("Arquivo 'models/metricas.csv' não encontrado. Execute o `train.py` primeiro para gerar as métricas.")        
