@@ -2,8 +2,56 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import joblib
+import base64
 
 st.set_page_config(page_title="Comparativo de Risco de Fogo", page_icon="🔥", layout="wide")
+
+def set_background(image_path):
+    with open(image_path, "rb") as image_file:
+        encoded_string = base64.b64encode(image_file.read()).decode()
+    
+    st.markdown(
+        f"""
+        <style>
+        .stApp {{
+            background-image: url(data:image/webp;base64,{encoded_string});
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }}
+        /* Fundo semi-transparente no conteúdo principal para manter a legibilidade do texto */
+        .block-container {{
+            background-color: rgba(14, 17, 23, 0.85);
+            border-radius: 10px;
+            color: #E1E1E1; /* Cor de texto padrão para o block-container */
+            flex-grow: 1; /* Faz o container crescer para preencher o espaço vertical */
+        }}
+        /* Garante que o texto dentro dos st.metric, st.alert, st.markdown e labels seja claro */
+        div[data-testid="stMetricLabel"] > div, /* Alvo: texto do label do st.metric */
+        div[data-testid="stMetricValue"] > div, /* Alvo: texto do valor do st.metric */
+        div[data-testid="stAlert"] > div > div, /* Alvo: texto dentro de st.success/warning/error */
+        .stMarkdown, /* Alvo: texto geral de st.markdown */
+        .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown h4, .stMarkdown h5, .stMarkdown h6, /* Alvo: títulos dentro de st.markdown */
+        label /* Alvo: labels de widgets de entrada (selectbox, slider, etc.) */
+        {{
+            color: #E1E1E1 !important; /* Força a cor de texto clara */
+        }}
+        /* Precisamos transformar o container pai (stMain) em um flexbox
+           para que a propriedade flex-grow do filho funcione. */
+        div[data-testid="stMain"] {{
+            display: flex;
+            flex-direction: column;
+        }}
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+try:
+    set_background("incendio.webp")
+except FileNotFoundError:
+    st.warning("Imagem 'incendio.webp' não encontrada. Verifique o caminho.")
+
 
 #carrega os modelos e a lista de municípios
 @st.cache_resource
