@@ -21,7 +21,7 @@ def set_background(image_path):
         }}
         /* Fundo semi-transparente no conteúdo principal para manter a legibilidade do texto */
         .block-container {{
-            background-color: rgba(14, 17, 23, 0.85);
+            background-color: rgba(14, 17, 23, 0.5);
             border-radius: 10px;
             color: #E1E1E1; /* Cor de texto padrão para o block-container */
             flex-grow: 1; /* Faz o container crescer para preencher o espaço vertical */
