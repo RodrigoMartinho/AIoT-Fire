@@ -7,8 +7,7 @@ from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
-from sklearn.metrics import mean_absolute_error, r2_score
-
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from preprocess import load_data, clean_data, add_features
 
 # carrega e processa os dados
@@ -39,7 +38,7 @@ categorical_features = ["Municipio_UF", "Estacao"]
 
 X = df[numeric_features + categorical_features]
 
-# préprocessamento
+# preprocessamento
 preprocessador = ColumnTransformer(
     transformers=[
         ("cat", OneHotEncoder(handle_unknown="ignore"), categorical_features),
@@ -74,23 +73,43 @@ X_train, X_test, y_train, y_test = train_test_split(
 
 # Treinamento dos modelos
 print("🚀 Iniciando treinamento dos modelos...")
+
 inicio = time.time()
+
+print("🔄Treinando Random Forest...")
+inicio2 = time.time()
 rf_model.fit(X_train, y_train)
+print("✅Random Forest treinado!\r\n Tempo: {:.2f} segundos".format(time.time() - inicio2))
+
+print("🔄Treinando Gradient Boosting...")
+inicio2 = time.time()
 gb_model.fit(X_train, y_train)
-print(f"🏁 Treinamento concluído (Tempo: {time.time() - inicio:.2f} segundos")
+print("Gradient Boosting treinado!\r\n Tempo: {:.2f} segundos".format(time.time() - inicio2))
 
-# =========================
-# PREDICTIONS (NO LOG SPACE)
-# =========================
-rf_pred = rf_model.predict(X_test)
-gb_pred = gb_model.predict(X_test)
+print(f"🏁 Treinamento concluído.\r\n Tempo: {time.time() - inicio:.2f} segundos")
 
-print("\n📊 RESULTADOS (LOG SPACE)")
-print("RF MAE:", mean_absolute_error(y_test, rf_pred))
-print("RF R²:", r2_score(y_test, rf_pred))
+# função de avaliação dos modelos
+def avaliar_modelo(nome, modelo):
 
-print("GB MAE:", mean_absolute_error(y_test, gb_pred))
-print("GB R²:", r2_score(y_test, gb_pred))
+    preds = modelo.predict(X_test)
+
+    mae = mean_absolute_error(y_test, preds)
+
+    rmse = np.sqrt(
+        mean_squared_error(y_test, preds)
+    )
+
+    r2 = r2_score(y_test, preds)
+
+    print(f"\n📊 {nome}")
+    print("MAE:", round(mae, 4))
+    print("RMSE:", round(rmse, 4))
+    print("R²:", round(r2, 4))
+
+
+# metricas dos modelos utilizados
+avaliar_modelo("Random Forest", rf_model)
+avaliar_modelo("Gradient Boosting", gb_model)
 
 # Salva os modelos em disco
 joblib.dump(rf_model, "models/rf_model.pkl")
@@ -100,4 +119,16 @@ joblib.dump(gb_model, "models/gb_model.pkl")
 municipios = sorted(df["Municipio_UF"].unique())
 joblib.dump(municipios, "models/municipios.pkl")
 
-print("\n✔ Modelos salvos com sucesso!")
+# dados para o gráfico de focos por mês
+grafico_df = (
+    df.groupby(["Municipio_UF", "Mes"])
+      .size()
+      .reset_index(name="QuantidadeFocos")
+)
+
+grafico_df.to_csv(
+    "models/focos_por_mes.csv",
+    index=False
+)
+
+print("\n✔ Modelos e arquivos salvos!")

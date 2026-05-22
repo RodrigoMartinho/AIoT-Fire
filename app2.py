@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import joblib
+import matplotlib.pyplot as plt
 
 # Configuração da página para um layout mais amplo
 st.set_page_config(page_title="Comparativo de Risco de Fogo", page_icon="🔥", layout="wide")
@@ -12,9 +13,11 @@ def load_models():
     rf_model = joblib.load("models/rf_model.pkl")
     gb_model = joblib.load("models/gb_model.pkl")
     municipios = joblib.load("models/municipios.pkl")
+
     return rf_model, gb_model, municipios
 
 rf_model, gb_model, municipios = load_models()
+grafico_df = pd.read_csv("models/focos_por_mes.csv")
 
 # Dicionário para traduzir o nome do mês para o número que o modelo espera
 MAPA_MESES = {
@@ -27,19 +30,34 @@ MAPA_MESES = {
 st.title("🔥 Sistema de Previsão de Fogo - Amazônia Legal")
 st.markdown("Insira os dados ambientais abaixo para comparar as previsões dos modelos **Random Forest** e **Gradient Boosting**.")
 
-col1, col2, col3, col4 = st.columns(4)
+left_col, right_col = st.columns([1, 2])
 
-with col1:
+with left_col:
+    st.subheader("📥 Dados de Entrada")
     municipio = st.selectbox("Município", municipios)
-with col2:
-    # Exibe as strings amigáveis para o usuário
-    mes_nome = st.selectbox("Mês", list(MAPA_MESES.keys()), index=7) 
-    # Pega o nro correspondente ao mês (ex: "Agosto" -> 8)
+    mes_nome = st.selectbox("Mês", list(MAPA_MESES.keys()), index=7)
     mes = MAPA_MESES[mes_nome]
-with col3:
     dias_sem_chuva = st.slider("Dias sem chuva", 0, 90, 15)
-with col4:
     precipitacao = st.slider("Precipitação (mm)", 0.0, 150.0, 0.0)
+    comparar = st.button("Comparar Modelos", type="primary", use_container_width=True)
+
+with right_col:
+    st.subheader("📈 Histórico de focos por mês")
+    dados_municipio = grafico_df[
+        grafico_df["Municipio_UF"] == municipio
+    ]
+
+    fig, ax = plt.subplots(figsize=(7, 3))
+    ax.plot(
+        dados_municipio["Mes"],
+        dados_municipio["QuantidadeFocos"],
+        marker="o"
+    )
+    ax.set_xlabel("Mês")
+    ax.set_ylabel("Quantidade de focos")
+    ax.set_xticks(range(1, 13))
+    st.pyplot(fig)
+
 
 def obter_status_risco(frp):
     if frp < 20:
@@ -49,9 +67,7 @@ def obter_status_risco(frp):
     else:
         return "ALTO 🔴", "error"
 
-
-if st.button("Comparar Modelos", type="primary", use_container_width=True):
-
+if comparar:
     features_order = ["Mes", "DiaSemChuva", "Precipitacao", "Municipio_UF", "Estacao"]
     
     # 'mes' já é inteiro (1 a 12)
