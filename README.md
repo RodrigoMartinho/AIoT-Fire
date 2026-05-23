@@ -8,4 +8,5 @@ Dados obtidos da plataforma Terrabrasilis, mais especificamente no BDQueimadas, 
 Randon Forest e Gradient Boosting
 
 # Frameworks
-pandas, streamlit
+treinamento - pandas, scikit-learn
+app - pandas, streamlit

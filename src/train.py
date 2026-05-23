@@ -8,21 +8,61 @@ from sklearn.preprocessing import OneHotEncoder
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
-from preprocess import load_data, clean_data, add_features
+
 
 # carrega e processa os dados
 print("📥 Carregando e processando dados...")
 inicio = time.time()
-# carga de arquivo XLSX demora muito (pelos testes, em torno de 1 minuto), 
-# então vamos usar CSV para agilizar o processo
-# df = load_data("dataset/Focos-AmazoniaLegal2020-2025-Final.xlsx")
+# carga de arquivo XLSX demora muito (pelos testes, em torno de 1 minuto),  então vamos usar CSV para agilizar o processo
+#df = pd.read_excel("dataset/Focos-AmazoniaLegal2020-2025-Final.xlsx")
 df = pd.read_csv("dataset/Focos-AmazoniaLegal2020-2025-Final.csv", encoding="utf-8", sep=";", low_memory=False)
 print(f"✅ Dados carregados com sucesso!\r\nTotal de registros: {len(df)}\r\nTempo: {time.time() - inicio:.2f} segundos")
-df = df.dropna(subset=["FRP"])
+
 print("📊 Processando dados...")
 inicio = time.time()
-df = clean_data(df)
-print(f"✅ Dados limpos!\r\nTempo: {time.time() - inicio:.2f} segundos")
+
+df = df.dropna(subset=["FRP"])
+
+df["Mes"] = df["Mes"].astype(int)
+df["DiaSemChuva"] = df["DiaSemChuva"].astype(float)
+df["Precipitacao"] = df["Precipitacao"].astype(float)
+
+print(f"✅ Dados limpos!\r\nTotal de registros: {len(df)}\r\nTempo: {time.time() - inicio:.2f} segundos")
+
+
+def converter_nome_para_sigla(df, coluna_estado="Estado"):
+    """
+    Mapeia os nomes cheios dos estados da Amazônia Legal para suas respectivas siglas.
+    """
+    mapeamento_uf = {
+        "ACRE": "AC",
+        "AMAPÁ": "AP",
+        "AMAZONAS": "AM",
+        "MARANHÃO": "MA",
+        "MATO GROSSO": "MT",
+        "PARÁ": "PA",
+        "RONDÔNIA": "RO",
+        "RORAIMA": "RR",
+        "TOCANTINS": "TO"
+    }
+    
+    df[coluna_estado] = df[coluna_estado].astype(str).str.strip()
+    df[coluna_estado] = df[coluna_estado].map(mapeamento_uf).fillna(df[coluna_estado])
+    
+    return df
+
+def add_features(df):
+    def estacao(mes):
+        if mes in [11, 12, 1, 2, 3, 4, 5]:
+            return "chuvosa"
+        return "seca"
+
+    df["Estacao"] = df["Mes"].apply(estacao)
+    df = converter_nome_para_sigla(df, coluna_estado="Estado")
+    df["Municipio_UF"] = df["Municipio"].astype(str) + " - " + df["Estado"].astype(str)    
+
+    return df
+
 print("🔄 Adicionando características...")
 inicio = time.time()
 df = add_features(df)
@@ -31,7 +71,9 @@ print(f"✅ Características adicionadas!\r\nTempo: {time.time() - inicio:.2f} s
 # alvo
 df = df[df["FRP"] > 0]  
 
-y = np.log1p(df["FRP"])
+# aqui é aplicado o log para lidar melhor com a
+# distribuição assimétrica dos valores de FRP, que é a variável alvo. 
+y = np.log1p(df["FRP"]) 
 
 # features
 numeric_features = ["Mes", "DiaSemChuva", "Precipitacao"]

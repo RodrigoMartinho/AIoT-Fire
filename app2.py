@@ -42,6 +42,10 @@ def set_background(image_path):
             display: flex;
             flex-direction: column;
         }}
+        /* Fundo destacado para os painéis de métricas (containers com borda) */
+        div[data-testid="stVerticalBlockBorderWrapper"] {{
+            background-color: rgba(255, 255, 255, 0.8);
+        }}
         </style>
         """,
         unsafe_allow_html=True
@@ -77,7 +81,7 @@ MAPA_MESES = {
 }
 
 #Interface do usuário
-st.title("🔥 Sistema de Previsão de Fogo - Amazônia Legal")
+st.title("🔥 Sistema de Previsão de Intensidade de Fogo - Amazônia Legal")
 st.markdown("Insira os dados ambientais abaixo para comparar as previsões dos modelos **Random Forest** e **Gradient Boosting**.")
 
 if "mes_selecionado" not in st.session_state:
@@ -178,18 +182,20 @@ with col_comp:
             col_rf, col_gb = st.columns(2)
 
             with col_rf:
-                st.markdown("### 🌲 Random Forest")
-                st.metric(label="FRP Previsto", value=f"{rf_frp:.2f} MW")
-                if rf_tipo == "success": st.success(f"Risco: {rf_risco}")
-                elif rf_tipo == "warning": st.warning(f"Risco: {rf_risco}")
-                else: st.error(f"Risco: {rf_risco}")
+                with st.container(border=True):
+                    st.markdown("### 🌲 Random Forest")
+                    st.metric(label="FRP Previsto", value=f"{rf_frp:.2f} MW")
+                    if rf_tipo == "success": st.success(f"Risco: {rf_risco}")
+                    elif rf_tipo == "warning": st.warning(f"Risco: {rf_risco}")
+                    else: st.error(f"Risco: {rf_risco}")
 
             with col_gb:
-                st.markdown("### ⚡ Gradient Boosting")
-                st.metric(label="FRP Previsto", value=f"{gb_frp:.2f} MW")
-                if gb_tipo == "success": st.success(f"Risco: {gb_risco}")
-                elif gb_tipo == "warning": st.warning(f"Risco: {gb_risco}")
-                else: st.error(f"Risco: {gb_risco}")
+                with st.container(border=True):
+                    st.markdown("### ⚡ Gradient Boosting")
+                    st.metric(label="FRP Previsto", value=f"{gb_frp:.2f} MW")
+                    if gb_tipo == "success": st.success(f"Risco: {gb_risco}")
+                    elif gb_tipo == "warning": st.warning(f"Risco: {gb_risco}")
+                    else: st.error(f"Risco: {gb_risco}")
 
     else:
         st.info("👈 Preencha os dados e clique em **Comparar Modelos**.")
@@ -218,18 +224,20 @@ with st.expander("📋 Sobre a precisão histórica destes modelos (Métricas de
         
         # Filtra os dados de cada modelo para exibir nos cards
         with m_col1:
-            st.markdown("#### 🌲 Random Forest")
-            rf_m = df_metricas[df_metricas["Modelo"] == "Random Forest"].iloc[0]
-            st.metric("R² (Variância)", f"{rf_m['R²']:.4f}")
-            st.metric("MAE (Erro Médio)", f"{rf_m['MAE']:.4f}")
-            st.metric("RMSE (Erros Grandes)", f"{rf_m['RMSE']:.4f}")
+            with st.container(border=True):
+                st.markdown("#### 🌲 Random Forest")
+                rf_m = df_metricas[df_metricas["Modelo"] == "Random Forest"].iloc[0]
+                st.metric("R² (Variância)", f"{rf_m['R²']:.4f}")
+                st.metric("MAE (Erro Médio)", f"{rf_m['MAE']:.4f}")
+                st.metric("RMSE (Erros Grandes)", f"{rf_m['RMSE']:.4f}")
             
         with m_col2:
-            st.markdown("#### ⚡ Gradient Boosting")
-            gb_m = df_metricas[df_metricas["Modelo"] == "Gradient Boosting"].iloc[0]
-            st.metric("R² (Variância)", f"{gb_m['R²']:.4f}")
-            st.metric("MAE (Erro Médio)", f"{gb_m['MAE']:.4f}")
-            st.metric("RMSE (Erros Grandes)", f"{gb_m['RMSE']:.4f}")
+            with st.container(border=True):
+                st.markdown("#### ⚡ Gradient Boosting")
+                gb_m = df_metricas[df_metricas["Modelo"] == "Gradient Boosting"].iloc[0]
+                st.metric("R² (Variância)", f"{gb_m['R²']:.4f}")
+                st.metric("MAE (Erro Médio)", f"{gb_m['MAE']:.4f}")
+                st.metric("RMSE (Erros Grandes)", f"{gb_m['RMSE']:.4f}")
             
     except FileNotFoundError:
         st.warning("Arquivo 'models/metricas.csv' não encontrado. Execute o `train.py` primeiro para gerar as métricas.")        
