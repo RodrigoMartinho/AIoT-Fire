@@ -118,7 +118,6 @@ with st.sidebar:
     mes = MAPA_MESES[st.session_state.mes_selecionado]
     dias_sem_chuva = st.slider("Dias sem chuva", 0, 90, 15)
     precipitacao = st.slider("Precipitação (mm)", 0.0, 150.0, 0.0)
-    comparar = st.button("Comparar Modelos", type="primary", use_container_width=True)
 
 col_hist, col_comp = st.columns([2, 3])
 
@@ -153,52 +152,48 @@ def obter_status_risco(frp):
 with col_comp:
     st.subheader("📊 Resultado Comparativo")
     
-    if comparar:
-        if not municipio:
-            st.warning("⚠️ Por favor, selecione um município na barra lateral antes de comparar.")
-        else:
-            features_order = ["Mes", "DiaSemChuva", "Precipitacao", "Municipio_UF", "Estacao"]
-            
-            # 'mes' já é inteiro (1 a 12)
-            input_df = pd.DataFrame([{
-                "Municipio_UF": municipio,
-                "Estacao": "seca" if mes in [6, 7, 8, 9, 10] else "chuvosa",
-                "Mes": mes,
-                "DiaSemChuva": dias_sem_chuva,
-                "Precipitacao": precipitacao
-            }])
-            
-            input_df = input_df[features_order]
-
-            # Executando as Previsões
-            rf_frp_log = rf_model.predict(input_df)[0]
-            rf_frp = np.expm1(rf_frp_log)
-            rf_risco, rf_tipo = obter_status_risco(rf_frp)
-
-            gb_frp_log = gb_model.predict(input_df)[0]
-            gb_frp = np.expm1(gb_frp_log)
-            gb_risco, gb_tipo = obter_status_risco(gb_frp)
-
-            col_rf, col_gb = st.columns(2)
-
-            with col_rf:
-                with st.container(border=True):
-                    st.markdown("### 🌲 Random Forest")
-                    st.metric(label="FRP Previsto", value=f"{rf_frp:.2f} MW")
-                    if rf_tipo == "success": st.success(f"Risco: {rf_risco}")
-                    elif rf_tipo == "warning": st.warning(f"Risco: {rf_risco}")
-                    else: st.error(f"Risco: {rf_risco}")
-
-            with col_gb:
-                with st.container(border=True):
-                    st.markdown("### ⚡ Gradient Boosting")
-                    st.metric(label="FRP Previsto", value=f"{gb_frp:.2f} MW")
-                    if gb_tipo == "success": st.success(f"Risco: {gb_risco}")
-                    elif gb_tipo == "warning": st.warning(f"Risco: {gb_risco}")
-                    else: st.error(f"Risco: {gb_risco}")
-
+    if not municipio:
+        st.info("👈 Selecione um município na barra lateral para ver a comparação.")
     else:
-        st.info("👈 Preencha os dados e clique em **Comparar Modelos**.")
+        features_order = ["Mes", "DiaSemChuva", "Precipitacao", "Municipio_UF", "Estacao"]
+        
+        # 'mes' já é inteiro (1 a 12)
+        input_df = pd.DataFrame([{
+            "Municipio_UF": municipio,
+            "Estacao": "seca" if mes in [6, 7, 8, 9, 10] else "chuvosa",
+            "Mes": mes,
+            "DiaSemChuva": dias_sem_chuva,
+            "Precipitacao": precipitacao
+        }])
+        
+        input_df = input_df[features_order]
+
+        # Executando as Previsões
+        rf_frp_log = rf_model.predict(input_df)[0]
+        rf_frp = np.expm1(rf_frp_log)
+        rf_risco, rf_tipo = obter_status_risco(rf_frp)
+
+        gb_frp_log = gb_model.predict(input_df)[0]
+        gb_frp = np.expm1(gb_frp_log)
+        gb_risco, gb_tipo = obter_status_risco(gb_frp)
+
+        col_rf, col_gb = st.columns(2)
+
+        with col_rf:
+            with st.container(border=True):
+                st.markdown("### 🌲 Random Forest")
+                st.metric(label="FRP Previsto", value=f"{rf_frp:.2f} MW")
+                if rf_tipo == "success": st.success(f"Risco: {rf_risco}")
+                elif rf_tipo == "warning": st.warning(f"Risco: {rf_risco}")
+                else: st.error(f"Risco: {rf_risco}")
+
+        with col_gb:
+            with st.container(border=True):
+                st.markdown("### ⚡ Gradient Boosting")
+                st.metric(label="FRP Previsto", value=f"{gb_frp:.2f} MW")
+                if gb_tipo == "success": st.success(f"Risco: {gb_risco}")
+                elif gb_tipo == "warning": st.warning(f"Risco: {gb_risco}")
+                else: st.error(f"Risco: {gb_risco}")
 
 
 # ========================================
